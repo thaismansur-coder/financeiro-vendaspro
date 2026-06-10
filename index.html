@@ -91,7 +91,7 @@ const FIXED={caixaAtual:314935,folego:1.5,saidaMedia:207000,geracaoTipica:8000,
 const MESN=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
 const BRAND='#8273C8',DATAC='#6F6B96',POS='#34B985',NEG='#E25C6A',WARN='#E0A23C',MUT='#9595ad',GRID='rgba(255,255,255,.05)',G1='#5e5b80',G2='#74708f';
 const $=id=>document.getElementById(id);
-const fmtMi=v=>'R$ '+(v/1e6).toFixed(2).replace('.',',')+' mi';
+const fmtMi=v=>{var a=Math.abs(v);return a>=1e6?'R$ '+(v/1e6).toFixed(2).replace('.',',')+' mi':(a>=1000?'R$ '+Math.round(v/1000).toLocaleString('pt-BR')+' mil':'R$ '+Math.round(Math.abs(v)).toLocaleString('pt-BR'));};
 const fmtMil=v=>'R$ '+Math.round(v/1000).toLocaleString('pt-BR')+' mil';
 const fmtPct=v=>(v*100).toFixed(1).replace('.',',')+'%';
 const BRL=v=>'R$ '+Math.round(v).toLocaleString('pt-BR');
