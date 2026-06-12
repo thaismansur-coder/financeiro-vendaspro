@@ -95,7 +95,7 @@ const TX={"REC":[[2,2395.32,"Closer Pro","Hotmart (Conta Azul)",0],[3,499.0,"Clo
 const TX_URL="https://docs.google.com/spreadsheets/d/e/2PACX-1vRu0E6AGmZyJ6bDCs5MzqwLADZgjofsSi2e3H09hoO2OfdHH7il0vaVNAPhpYPDvGloROVfln0FPYVt/pub?gid=57296657&single=true&output=csv";
 const FIXED={caixaAtual:314935,folego:1.5,saidaMedia:207000,geracaoTipica:8000,
  trajeto:{real:[13919,14202,21858,245213,314935,null,null,null,null,null,null,null],run:[null,null,null,null,314935,373117,431299,489481,547663,605845,664027,722209],tip:[null,null,null,null,314935,322591,330247,337903,345559,353215,360872,368528],labels:["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"]},
- prodOrder:['Comercial Pro','Closer Pro','Consultoria','Líder Pro','Low Ticket/Outros','A identificar'],
+ prodOrder:['Comercial Pro','Closer Pro','Especialização HT','Consultoria','Líder Pro','Low Ticket/Outros','A identificar'],
  srcOrder:['Hotmart (Conta Azul)','Itaú recebimentos diretos','Asaas (Conta Azul)','Receitas a identificar']};
 const FOLHA_PESSOA=[{n:"Brenno",a:"Marketing",p:"Coordenador de MKT",m:[12933.33,14000,12000,15000,15000,10000]},
 {n:"Eloisa",a:"CS",p:"CS + Consultoria",seg:[{a:"CS",pct:0.6},{a:"Consultoria",pct:0.4}],m:[12500,12500,12000,12000,11533.33,10000]},
@@ -150,13 +150,14 @@ const charts=[]; var rFat=null;
 function numBR(s){if(s==null)return null;s=String(s).trim();if(s===''||s==='-')return null;var neg=/^\(.*\)$/.test(s)||s.indexOf('-')>-1;var pc=/%/.test(s);s=s.replace(/[()%-]/g,'').replace(/R\$/g,'').replace(/\s/g,'');var lc=s.lastIndexOf(','),ld=s.lastIndexOf('.');if(lc>-1&&ld>-1){if(lc>ld){s=s.replace(/\./g,'').replace(',','.');}else{s=s.replace(/,/g,'');}}else if(lc>-1){var a=s.length-lc-1;if(a===2&&(s.split(',').length-1)===1){s=s.replace(',','.');}else{s=s.replace(/,/g,'');}}else if(ld>-1){var a2=s.length-ld-1;if(a2===3&&(s.split('.').length-1)===1){s=s.replace(/\./g,'');}}var v=parseFloat(s);if(isNaN(v))return null;if(pc)v=v/100;return neg?-v:v;}
 function parseCSV(t){var rows=[],row=[],cur='',q=false;for(var i=0;i<t.length;i++){var c=t[i];if(q){if(c==='"'){if(t[i+1]==='"'){cur+='"';i++;}else q=false;}else cur+=c;}else{if(c==='"')q=true;else if(c===','){row.push(cur);cur='';}else if(c==='\n'){row.push(cur);rows.push(row);row=[];cur='';}else if(c!=='\r')cur+=c;}}if(cur!==''||row.length){row.push(cur);rows.push(row);}return rows;}
 function norm(s){return (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').trim();}
+function canonProd(g){var n=norm(g);if(n.indexOf('especial')>-1||(n.indexOf('closer')>-1&&n.indexOf('high ticket')>-1)||n==='especializacao ht'||n.indexOf('closer ht')>-1)return 'Especialização HT';return (g||'').trim()||'Outros';}
 function parseTx(text){
   var rows=parseCSV(text),REC=[],PAG=[];
   var bmap={'taxas':'taxas','impostos':'impostos','devolucoes':'devolucoes','midia':'midia','equipe':'equipe','software':'software','consultoria':'consultoria','outras':'outras','distribuicao':'distribuicao'};
   for(var i=1;i<rows.length;i++){var r=rows[i];if(!r||r.length<4)continue;
     var ds=(r[0]||'').trim();var dd,mm,yy;if(ds.indexOf('/')>-1){var p=ds.split('/');dd=+p[0];mm=+p[1];yy=+p[2];}else if(ds.indexOf('-')>-1){var p=ds.split('-');yy=+p[0];mm=+p[1];dd=+p[2];}else continue;var idx=Math.round((Date.UTC(yy,mm-1,dd)-D0)/86400000);if(isNaN(idx))continue;
     var val=numBR(r[2]);if(val==null)continue;var tp=norm(r[1]),grp=(r[3]||'').trim(),oi=norm(r[5])==='sim'?1:0;
-    if(tp.indexOf('receb')===0)REC.push([idx,val,grp,(r[4]||'').trim()||'Outros',oi]);
+    if(tp.indexOf('receb')===0)REC.push([idx,val,canonProd(grp),(r[4]||'').trim()||'Outros',oi]);
     else if(tp.indexOf('pag')===0){var b=bmap[norm(grp)]||'outras';PAG.push([idx,val,b,oi]);}}
   if(REC.length<5||PAG.length<5)throw'poucas linhas';
   return {REC:REC,PAG:PAG,REF:TX.REF,HOT:TX.HOT};
