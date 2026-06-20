@@ -28,6 +28,11 @@ main{flex:1;min-width:0;}
 .content{padding:14px 32px 56px;}
 .keybar{display:flex;gap:18px;flex-wrap:wrap;font-size:12px;font-weight:600;color:var(--mut);background:var(--card);border:1px solid var(--line);border-radius:12px;padding:11px 16px;margin-bottom:18px;align-items:center;}
 .keybar .kk{display:flex;align-items:center;gap:7px;} .keybar .kd{width:11px;height:11px;border-radius:3px;} .keybar .src{margin-left:auto;color:var(--mut2);font-weight:500;}
+.evfilter{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;}
+.evfilter .flbl{font-size:11px;color:var(--mut);font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-right:4px;}
+.evfilter button{padding:8px 14px;border:1px solid var(--line);background:var(--card);color:var(--mut);font-family:inherit;font-size:13px;font-weight:600;border-radius:10px;cursor:pointer;transition:.15s;}
+.evfilter button:hover{color:var(--tx);border-color:var(--mut2);}
+.evfilter button.active{background:rgba(130,115,200,.16);color:#fff;border-color:rgba(130,115,200,.5);}
 .view{display:none;} .view.active{display:block;animation:f .25s ease;}
 @keyframes f{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:15px;margin-bottom:18px;}
@@ -91,6 +96,7 @@ main{flex:1;min-width:0;}
 <div class="panel"><h3 id="e_dt">Detalhe por pessoa</h3><div class="cap" id="e_dc">fonte: aba Prestadores de Serviço</div><div style="overflow-x:auto"><table class="etab"><thead><tr><th id="th1">Pessoa</th><th id="th2">Área</th><th id="th3">Papel</th><th id="th4" style="text-align:right">No período</th><th id="th5" style="text-align:right">% folha</th><th id="th6" style="text-align:right">Média/mês</th></tr></thead><tbody id="e_tbl"></tbody></table></div></div></section>
 <section class="view" id="evol">
 <div class="keybar"><span class="kk"><i class="ti ti-info-circle" style="color:var(--data)"></i> Comparação do 1º semestre (Jan–Jun)</span><span class="kk">2025–26: competência (Conta Azul)</span><span class="kk">2024: caixa / aproximado</span><span class="src" id="ev_src">2025–26: competência (DRE Conta Azul) · 2024: caixa (planilha de gestão)</span></div>
+<div class="evfilter" id="ev_filter"><span class="flbl">Comparar</span><button data-sel="0,1,2" class="active">2024 · 2025 · 2026</button><button data-sel="0,1">2024 vs 2025</button><button data-sel="1,2">2025 vs 2026</button></div>
 <div class="kpis">
 <div class="kpi" id="ev_k1"><div class="lbl">Receita líquida · 1º sem</div><div class="val">—</div><div class="sub"></div></div>
 <div class="kpi bad" id="ev_k2"><div class="lbl">Folha · 1º sem</div><div class="val">—</div><div class="sub"></div></div>
@@ -102,7 +108,7 @@ main{flex:1;min-width:0;}
 <div class="chartbox" style="height:300px"><canvas id="ev_tesoura"></canvas></div></div>
 <div class="grid2">
 <div class="panel"><h3>Índices de eficiência</h3><div class="cap">a operação está ficando mais cara por real de receita</div>
-<div style="overflow-x:auto"><table class="etab"><thead><tr><th>Indicador (1º sem)</th><th style="text-align:right">2024</th><th style="text-align:right">2025</th><th style="text-align:right">2026</th></tr></thead><tbody id="ev_efic"></tbody></table></div></div>
+<div style="overflow-x:auto" id="ev_efic"></div></div>
 <div class="panel"><h3>Para onde foi o aumento de custo</h3><div class="cap">custo operacional do 1º sem (abaixo da receita líquida) · R$ mil</div>
 <div class="chartbox"><canvas id="ev_custo"></canvas></div></div>
 </div>
@@ -295,19 +301,23 @@ function render(R){renderEquipe(R);
 function applyRange(){var de=$('fat_de').value,ate=$('fat_ate').value;if(!de||!ate)return;var i0=Math.round((Date.parse(de)-D0)/86400000),i1=Math.round((Date.parse(ate)-D0)/86400000);if(i1<i0){var t=i0;i0=i1;i1=t;}render(recompute(i0,i1));}
 function setBounds(){var lo=1e9,hi=-1,all=TX.REC.concat(TX.PAG);for(var k=0;k<all.length;k++){var d=all[k][0];if(d<lo)lo=d;if(d>hi)hi=d;}if(hi<0){lo=0;hi=150;}var L=isoDate(lo),Hh=isoDate(hi);['fat_de','fat_ate'].forEach(id=>{var e=$(id);e.min=L;e.max=Hh;});$('fat_de').value=L;$('fat_ate').value=Hh;}
 const EVOL={"years":[2024,2025,2026],"recLiq":[383412,511420,651871],"folha":[104044,313759,481629],"ebit":[153148,238512,121055],"custoDec":{"Pessoal + administrativo":[208722,232730,462802],"Mídia / Marketing":[16034,22934,54290],"Variáveis / gateway":[5508,16624,13224],"Infraestrutura":[0,621,500]},"folhaArea":{"Marketing":[48680,80114,163339],"Comercial":[7964,29900,149434],"Consultoria":[17900,55232,78249],"CS":[20500,73652,29710],"Operações":[9000,54636,39000],"Treinamento":[0,17500,4000],"Tecnologia":[0,0,17252],"Outros":[0,2724,645]},"produtoShare":{"Comercial Pro":[0,0,49],"Closer Pro":[48,63,26],"Líder Pro":[32,28,18],"Especialização HT":[0,0,7],"Consultoria":[19,0,0],"Low Ticket/Outros":[0,9,0]}};
-var evolDone=false; const EVL=['1º sem 2024','1º sem 2025','1º sem 2026']; const EVC=['#8273C8','#E25C6A','#34B985','#E0A23C','#6F6B96','#5DCAA5','#D4537E','#85B7EB','#BA7517','#888780'];
-function evStack(cid,obj,pct){var keys=Object.keys(obj);var ds=keys.map((k,i)=>({label:k,data:pct?obj[k]:obj[k].map(v=>v/1000),backgroundColor:EVC[i%EVC.length],borderRadius:4,stack:'s'}));return new Chart($(cid),{type:'bar',data:{labels:EVL,datasets:ds},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:11,font:{size:10},color:MUT}},tooltip:{callbacks:{label:c=>c.dataset.label+': '+(pct?Math.round(c.parsed.y)+'%':'R$ '+Math.round(c.parsed.y)+' mil')}}},scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,max:pct?100:undefined,grid:{color:GRID},ticks:{callback:v=>pct?v+'%':v+'k'}}}}});}
-function renderEvol(){if(evolDone)return;evolDone=true;var y=EVOL;
-var margem=y.ebit.map((e,i)=>Math.round(e/y.recLiq[i]*1000)/10);var rpf=y.folha.map((f,i)=>Math.round(y.recLiq[i]/f*100)/100);var fpct=y.folha.map((f,i)=>Math.round(f/y.recLiq[i]*1000)/10);
+var evolDone=false; const EVLF=['1º sem 2024','1º sem 2025','1º sem 2026']; const EVC=['#8273C8','#E25C6A','#34B985','#E0A23C','#6F6B96','#5DCAA5','#D4537E','#85B7EB','#BA7517','#888780']; var evCharts=[]; var evSel=[0,1,2];
+function evStack(cid,obj,pct,sel){var labels=sel.map(i=>EVLF[i]);var keys=Object.keys(obj);var ds=keys.map((k,i)=>({label:k,data:sel.map(j=>pct?obj[k][j]:obj[k][j]/1000),backgroundColor:EVC[i%EVC.length],borderRadius:4,stack:'s'}));return new Chart($(cid),{type:'bar',data:{labels:labels,datasets:ds},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:11,font:{size:10},color:MUT}},tooltip:{callbacks:{label:c=>c.dataset.label+': '+(pct?Math.round(c.parsed.y)+'%':'R$ '+Math.round(c.parsed.y)+' mil')}}},scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,max:pct?100:undefined,grid:{color:GRID},ticks:{callback:v=>pct?v+'%':v+'k'}}}}});}
+function evDraw(sel){evSel=sel;evCharts.forEach(c=>c.destroy());evCharts=[];var y=EVOL;var Y=y.years;var F=sel[0];var L=sel[sel.length-1];var labels=sel.map(i=>EVLF[i]);
+var margem=sel.map(i=>Math.round(y.ebit[i]/y.recLiq[i]*1000)/10);var rpf=sel.map(i=>Math.round(y.recLiq[i]/y.folha[i]*100)/100);var fpct=sel.map(i=>Math.round(y.folha[i]/y.recLiq[i]*1000)/10);
 function setk(id,val,sub){$(id).querySelector('.val').textContent=val;$(id).querySelector('.sub').innerHTML=sub;}
-setk('ev_k1',fmtMil(y.recLiq[2]),'<i class="ti ti-arrow-up-right" style="color:var(--pos)"></i> +'+Math.round((y.recLiq[2]/y.recLiq[0]-1)*100)+'% vs 2024');
-setk('ev_k2',fmtMil(y.folha[2]),'<i class="ti ti-arrow-up-right" style="color:var(--neg)"></i> +'+Math.round((y.folha[2]/y.folha[0]-1)*100)+'% vs 2024');
-setk('ev_k3','R$ '+rpf[2].toFixed(2).replace('.',','),'<i class="ti ti-arrow-down-right" style="color:var(--neg)"></i> era R$ '+rpf[0].toFixed(2).replace('.',',')+' em 2024');
-setk('ev_k4',margem[2].toFixed(0)+'%','<i class="ti ti-arrow-down-right" style="color:var(--neg)"></i> era '+margem[0].toFixed(0)+'% em 2024');
-new Chart($('ev_tesoura'),{data:{labels:EVL,datasets:[{type:'bar',label:'Receita líquida',data:y.recLiq.map(v=>v/1000),backgroundColor:BRAND,borderRadius:4,yAxisID:'y'},{type:'bar',label:'Folha',data:y.folha.map(v=>v/1000),backgroundColor:NEG,borderRadius:4,yAxisID:'y'},{type:'bar',label:'EBIT',data:y.ebit.map(v=>v/1000),backgroundColor:POS,borderRadius:4,yAxisID:'y'},{type:'line',label:'Margem EBIT %',data:margem,borderColor:WARN,borderWidth:2,borderDash:[6,4],pointBackgroundColor:WARN,pointRadius:4,tension:.2,yAxisID:'y1'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.dataset.yAxisID==='y1'?c.dataset.label+': '+Math.round(c.parsed.y)+'%':c.dataset.label+': R$ '+Math.round(c.parsed.y)+' mil'}}},scales:{y:{grid:{color:GRID},ticks:{callback:v=>v+'k'}},y1:{position:'right',min:0,max:60,grid:{drawOnChartArea:false},ticks:{callback:v=>v+'%'}},x:{grid:{display:false}}}}});
-var er=[['Receita por R$1 de folha',rpf.map(v=>'R$ '+v.toFixed(2).replace('.',','))],['Folha / Receita líquida',fpct.map(v=>v.toFixed(0)+'%')],['Margem EBIT',margem.map(v=>v.toFixed(0)+'%')]];
-$('ev_efic').innerHTML=er.map(r=>'<tr><td>'+r[0]+'</td>'+r[1].map(v=>'<td style="text-align:right;font-weight:700">'+v+'</td>').join('')+'</tr>').join('');
-evStack('ev_custo',y.custoDec);evStack('ev_area',y.folhaArea);evStack('ev_prod',y.produtoShare,true);}
+function dlt(arr,neg){var d=Math.round((arr[L]/arr[F]-1)*100);return '<i class="ti ti-arrow-'+(d>=0?'up':'down')+'-right" style="color:'+(neg?'var(--neg)':'var(--pos)')+'"></i> '+(d>=0?'+':'')+d+'% vs '+Y[F];}
+setk('ev_k1',fmtMil(y.recLiq[L]),dlt(y.recLiq,false));
+setk('ev_k2',fmtMil(y.folha[L]),dlt(y.folha,true));
+setk('ev_k3','R$ '+rpf[rpf.length-1].toFixed(2).replace('.',','),'<i class="ti ti-arrow-down-right" style="color:var(--neg)"></i> era R$ '+rpf[0].toFixed(2).replace('.',',')+' em '+Y[F]);
+setk('ev_k4',margem[margem.length-1].toFixed(0)+'%','<i class="ti ti-arrow-down-right" style="color:var(--neg)"></i> era '+margem[0].toFixed(0)+'% em '+Y[F]);
+evCharts.push(new Chart($('ev_tesoura'),{data:{labels:labels,datasets:[{type:'bar',label:'Receita líquida',data:sel.map(i=>y.recLiq[i]/1000),backgroundColor:BRAND,borderRadius:4,yAxisID:'y'},{type:'bar',label:'Folha',data:sel.map(i=>y.folha[i]/1000),backgroundColor:NEG,borderRadius:4,yAxisID:'y'},{type:'bar',label:'EBIT',data:sel.map(i=>y.ebit[i]/1000),backgroundColor:POS,borderRadius:4,yAxisID:'y'},{type:'line',label:'Margem EBIT %',data:margem,borderColor:WARN,borderWidth:2,borderDash:[6,4],pointBackgroundColor:WARN,pointRadius:4,tension:.2,yAxisID:'y1'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.dataset.yAxisID==='y1'?c.dataset.label+': '+Math.round(c.parsed.y)+'%':c.dataset.label+': R$ '+Math.round(c.parsed.y)+' mil'}}},scales:{y:{grid:{color:GRID},ticks:{callback:v=>v+'k'}},y1:{position:'right',min:0,max:60,grid:{drawOnChartArea:false},ticks:{callback:v=>v+'%'}},x:{grid:{display:false}}}}}));
+var rows=[['Receita líquida',sel.map(i=>fmtMil(y.recLiq[i]))],['Folha (equipe)',sel.map(i=>fmtMil(y.folha[i]))],['EBIT',sel.map(i=>fmtMil(y.ebit[i]))],['Receita por R$1 de folha',rpf.map(v=>'R$ '+v.toFixed(2).replace('.',','))],['Folha / Receita líquida',fpct.map(v=>v.toFixed(0)+'%')],['Margem EBIT',margem.map(v=>v.toFixed(0)+'%')]];
+var th='<th>Indicador (1º sem)</th>'+sel.map(i=>'<th style="text-align:right">'+Y[i]+'</th>').join('');
+var tb=rows.map(r=>'<tr><td>'+r[0]+'</td>'+r[1].map(v=>'<td style="text-align:right;font-weight:700">'+v+'</td>').join('')+'</tr>').join('');
+$('ev_efic').innerHTML='<table class="etab" style="width:100%"><thead><tr>'+th+'</tr></thead><tbody>'+tb+'</tbody></table>';
+evCharts.push(evStack('ev_custo',y.custoDec,false,sel));evCharts.push(evStack('ev_area',y.folhaArea,false,sel));evCharts.push(evStack('ev_prod',y.produtoShare,true,sel));}
+function renderEvol(){if(!evolDone){evolDone=true;document.querySelectorAll('#ev_filter button').forEach(b=>{b.onclick=function(){document.querySelectorAll('#ev_filter button').forEach(x=>x.classList.remove('active'));b.classList.add('active');evDraw(b.dataset.sel.split(',').map(Number));};});}evDraw(evSel);}
 const TITLES={resumo:'Resumo CEO',dre:'DRE por produto',conc:'Conciliação das 4 fontes',caixa:'Caixa & runway',equipe:'Equipe · gasto por pessoa',evol:'Evolução · análise estratégica'};
 document.querySelectorAll('.navi button').forEach(t=>t.onclick=()=>{document.querySelectorAll('.navi button').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));t.classList.add('active');$(t.dataset.v).classList.add('active');$('ttl').textContent=TITLES[t.dataset.v];if(t.dataset.v==='evol')renderEvol();});
 async function startApp(){
